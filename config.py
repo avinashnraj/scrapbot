@@ -10,14 +10,14 @@ g_martingale_enable = config["settings"]["martingale"]["enable"]
 g_level_spacing = config["settings"]["martingale"]["level_spacing"]
 g_scale_factor = config["settings"]["martingale"]["scale_factor"]
 g_level_maximum = config["settings"]["martingale"]["level_maximum"]
-g_total_profit = config["settings"]["martingale"]["total_profit"]
 
 g_initial_volume = config["settings"]["money-management"]["initial_volume"]
 g_stop_loss = config["settings"]["money-management"]["stop_loss"]
 g_take_profit = config["settings"]["money-management"]["take_profit"]
+g_min_total_profit = config["settings"]["money-management"]["minimum_total_profit"]
 
 g_token = config["settings"]["connection"]["token"]
-g_enable_trailing = config["settings"]["trailing"]["enable_trailing"]
+g_enable_sl_trailing = config["settings"]["trailing"]["enable_sl_trailing"]
 g_trailing_start = config["settings"]["trailing"]["trailing_start"]
 g_trailing_step = config["settings"]["trailing"]["trailing_step"]
 
