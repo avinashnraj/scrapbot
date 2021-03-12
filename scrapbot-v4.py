@@ -118,7 +118,9 @@ def engine():
             g_api.__print__(signal + ": closing Price: " + str(g_price_data['close'][-1:]))
             g_api.close_all_orders(g_symbol)
         elif g_enable_sl_to_open and total_pl > g_sl_to_open_total_profit:
-            set_sell_to_safe(positions, ask, bid, last_close_price)
+            # slow ema for sl
+            raw1, raw2 = g_signals.get_signal_raw(price_data=g_price_data, signal_type=g_signal_close_type)
+            set_sell_to_safe(positions, ask, bid, last_close_price, raw1)
         elif total_pl > g_min_total_profit:
             if g_enable_sl_trailing:
                 if len_orders > 0:
@@ -150,19 +152,33 @@ def trail(positions, ask, bid, last_close_price):
                                                                                                   bid))
 
 
-def set_sell_to_safe(positions, ask, bid, last_close_price):
+def set_sell_to_safe(positions, ask, bid, last_close_price, signal_raw):
     for row in positions:
         position_id = row.ticket
+        sl = row.price_open
         if row.type == 0:
-            if ask > last_close_price and row.price_open != row.sl:
+            if ask > signal_raw[-2] > row.price_open and signal_raw[-2] > row.sl:
+                sl = signal_raw[-2]
                 g_api.change_trade_stop_limit(symbol=g_symbol, order_type=row.type,
-                                              position_id=position_id, sl=row.price_open, tp=row.tp)
+                                              position_id=position_id, sl=sl, tp=row.tp)
+                g_api.__print__("[%s] Adjusting the buy trade stop to signal value - %f,%f" % (position_id,
+                                                                                       last_close_price, ask))
+            if ask > last_close_price and sl != row.sl:
+                g_api.change_trade_stop_limit(symbol=g_symbol, order_type=row.type,
+                                              position_id=position_id, sl=sl, tp=row.tp)
                 g_api.__print__("[%s] Adjusting the buy trade stop to open - %f,%f" % (position_id,
                                                                                        last_close_price, ask))
         else:
-            if bid < last_close_price and row.price_open != row.sl:
+            if bid < signal_raw[-2] < row.price_open and signal_raw[-2] < row.sl:
+                sl = signal_raw[-2]
                 g_api.change_trade_stop_limit(symbol=g_symbol, order_type=row.type,
-                                              position_id=position_id, sl=row.price_open, tp=row.tp)
+                                              position_id=position_id, sl=sl, tp=row.tp)
+                g_api.__print__("[%s] Adjusting the sell trade stop to signal value - %f,%f" % (position_id,
+                                                                                         last_close_price,
+                                                                                            bid))
+            elif bid < last_close_price and sl != row.sl:
+                g_api.change_trade_stop_limit(symbol=g_symbol, order_type=row.type,
+                                              position_id=position_id, sl=sl, tp=row.tp)
                 g_api.__print__("[%s] Adjusting the sell trade stop to open - %f,%f" % (position_id,
                                                                                         last_close_price,
                                                                                         bid))

@@ -37,6 +37,11 @@ class Signal(object):
             return self.test(price_data, signal_type, current, plot)
         return "None"
 
+    def get_signal_raw(self, price_data, signal_type):
+        if signal_type == "EMA":
+            return self.ema_raw(price_data)
+        return None, None
+
     def ema_rsi(self, price_data, signal_type, current, plot=False):
         data_frame = pd.DataFrame(price_data)
 
@@ -104,6 +109,13 @@ class Signal(object):
                     or current == "Buy" and data_frame.signal.iat[-1] == -1.0:
                 return "Close"
         return "None"
+
+    def ema_raw(self, price_data):
+        data_frame = pd.DataFrame(price_data)
+        close_list = data_frame['close'].tolist()
+        slow = talib.EMA(np.asarray(close_list), timeperiod=self.slow_sma_periods)
+        fast = talib.EMA(np.asarray(close_list), timeperiod=self.fast_sma_periods)
+        return slow, fast
 
     @staticmethod
     def test(price_data, signal_type, current, plot=False):
