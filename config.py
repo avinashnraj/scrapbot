@@ -17,7 +17,7 @@ g_stop_loss = config["settings"]["money-management"]["stop_loss"]
 g_take_profit = config["settings"]["money-management"]["take_profit"]
 
 g_token = config["settings"]["connection"]["token"]
-g_enable_trailing = config["settings"]["trailing"]["enable_trailing"]
+g_enable_sl_trailing = config["settings"]["trailing"]["enable_sl_trailing"]
 g_trailing_start = config["settings"]["trailing"]["trailing_start"]
 g_trailing_step = config["settings"]["trailing"]["trailing_step"]
 

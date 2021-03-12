@@ -19,7 +19,7 @@ settings:
     take_profit: 1000
 
   trailing:
-    enable_trailing: True
+    enable_sl_trailing: False
     trailing_start: 30
     trailing_step: 10
 

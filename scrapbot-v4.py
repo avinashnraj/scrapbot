@@ -118,16 +118,13 @@ def engine():
             g_api.__print__(signal + ": Close Price: " + str(g_price_data['close'][-1:]))
             g_api.close_all_orders(g_symbol)
         elif total_pl > g_total_profit:
-            if g_enable_trailing:
+            if g_enable_sl_trailing:
                 if len_orders > 0:
                     g_api.close_all_entry_orders(g_symbol)
                 trail(positions, total_pl, ask, bid, last_close_price)
             else:
                 g_api.close_all_orders(g_symbol)
                 g_api.__print__("Finishing and closing all orders and got enough profit")
-    # g_api.__print__("Next tick ask:%.5f bid:%.5f number of positions:%d, orders: %d, profit:%f" %
-    #               (round(ask,  g_api.get_point()),
-    #               round(bid, g_api.get_point()), len_positions, len_orders, total_pl))
 
 
 def trail(positions, profit, ask, bid, last_close_price):
