@@ -17,9 +17,13 @@ g_take_profit = config["settings"]["money-management"]["take_profit"]
 g_min_total_profit = config["settings"]["money-management"]["minimum_total_profit"]
 
 g_token = config["settings"]["connection"]["token"]
-g_enable_sl_trailing = config["settings"]["trailing"]["enable_sl_trailing"]
+
+g_enable_sl_trailing = config["settings"]["trailing"]["enable"]
 g_trailing_start = config["settings"]["trailing"]["trailing_start"]
 g_trailing_step = config["settings"]["trailing"]["trailing_step"]
+
+g_enable_sl_to_open = config["settings"]["sl_to_open"]["enable"]
+g_sl_to_open_total_profit = config["settings"]["sl_to_open"]["total_profit"]
 
 # Available periods : 'm1', 'm5', 'm15', 'm30', 'H1', 'H4'
 g_signal_open_type = config["settings"]["signals"]["open_type"]

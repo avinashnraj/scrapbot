@@ -1,3 +1,6 @@
+
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -102,12 +105,12 @@ class Signal(object):
                 return "Close"
         return "None"
 
-    def test(self, price_data, signal_type, current, plot=False):
-        if True:
+    @staticmethod
+    def test(price_data, signal_type, current, plot=False):
+        if random.randrange(0, 2) == 1:
             return "Buy"
         else:
             return "Sell"
-
 
     def plot_signal(self, data_frame, signal_type, fast_sma_periods, slow_sma_periods, lower_key, show):
         if show:

@@ -19,9 +19,13 @@ settings:
     minimum_total_profit: 1000
 
   trailing:
-    enable_sl_trailing: False
+    enable: False
     trailing_start: 30
     trailing_step: 10
+
+  sl_to_open:
+    enable: True
+    total_profit: 3
 
   signals:
     open_type: EMA_RSI

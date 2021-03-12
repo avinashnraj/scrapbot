@@ -82,7 +82,7 @@ def engine():
         try:
             signal = g_signals.get(price_data=g_price_data, signal_type=g_signal_open_type, current=None)
             if signal == "Buy":
-                g_api.__print__(signal + ": Close Price: " + str(last_close_price))
+                g_api.__print__(signal + ": closing Price: " + str(last_close_price))
                 tp = g_take_profit
                 sl = ((g_level_maximum - 1) * g_level_spacing if g_martingale_enable else 0 + g_stop_loss)
                 tp = ask + tp * g_api.get_point()
@@ -94,7 +94,7 @@ def engine():
                         g_api.create_entry_order(symbol=g_symbol, is_buy=True, amount=amt,
                                                  tp=tp, rate=ask - index * g_level_spacing * g_api.get_point(), sl=sl)
             elif signal == "Sell":
-                g_api.__print__(signal + ": Close Price: " + str(last_close_price))
+                g_api.__print__(signal + ": closing Price: " + str(last_close_price))
                 tp = g_take_profit
                 sl = ((g_level_maximum - 1) * g_level_spacing if g_martingale_enable else 0 + g_stop_loss)
                 tp = bid - tp * g_api.get_point()
@@ -115,22 +115,22 @@ def engine():
         signal = g_signals.get(price_data=g_price_data, signal_type=g_signal_close_type,
                                current=g_api.get_type_str(order_type))
         if signal == "Close":
-            g_api.__print__(signal + ": Close Price: " + str(g_price_data['close'][-1:]))
+            g_api.__print__(signal + ": closing Price: " + str(g_price_data['close'][-1:]))
             g_api.close_all_orders(g_symbol)
+        elif g_enable_sl_to_open and total_pl > g_sl_to_open_total_profit:
+            set_sell_to_safe(positions, ask, bid, last_close_price)
         elif total_pl > g_min_total_profit:
             if g_enable_sl_trailing:
                 if len_orders > 0:
                     g_api.close_all_entry_orders(g_symbol)
-                trail(positions, total_pl, ask, bid, last_close_price)
+                trail(positions, ask, bid, last_close_price)
             else:
                 g_api.close_all_orders(g_symbol)
                 g_api.__print__("Finishing and closing all orders and got enough profit")
 
 
-def trail(positions, profit, ask, bid, last_close_price):
+def trail(positions, ask, bid, last_close_price):
     trailing_start = g_trailing_start
-    if profit > 0:
-        trailing_start = g_trailing_start * 2
     for row in positions:
         position_id = row.ticket
         if row.type == 0:
@@ -148,6 +148,24 @@ def trail(positions, profit, ask, bid, last_close_price):
                 g_api.__print__("[%s] Adjusting the sell trade stop and trailing step - %f,%f" % (position_id,
                                                                                                   last_close_price,
                                                                                                   bid))
+
+
+def set_sell_to_safe(positions, ask, bid, last_close_price):
+    for row in positions:
+        position_id = row.ticket
+        if row.type == 0:
+            if ask > last_close_price and row.price_open != row.sl:
+                g_api.change_trade_stop_limit(symbol=g_symbol, order_type=row.type,
+                                              position_id=position_id, sl=row.price_open, tp=row.tp)
+                g_api.__print__("[%s] Adjusting the buy trade stop to open - %f,%f" % (position_id,
+                                                                                       last_close_price, ask))
+        else:
+            if bid < last_close_price and row.price_open != row.sl:
+                g_api.change_trade_stop_limit(symbol=g_symbol, order_type=row.type,
+                                              position_id=position_id, sl=row.price_open, tp=row.tp)
+                g_api.__print__("[%s] Adjusting the sell trade stop to open - %f,%f" % (position_id,
+                                                                                        last_close_price,
+                                                                                        bid))
 
 
 if __name__ == "__main__":
