@@ -163,7 +163,7 @@ def set_sell_to_safe(positions, ask, bid, last_close_price, signal_raw):
                                               position_id=position_id, sl=sl, tp=row.tp)
                 g_api.__print__("[%s] Adjusting the buy trade stop to signal value - %f,%f" % (position_id,
                                                                                        last_close_price, ask))
-            if ask > last_close_price and sl != row.sl:
+            elif ask > last_close_price and sl != row.sl:
                 g_api.change_trade_stop_limit(symbol=g_symbol, order_type=row.type,
                                               position_id=position_id, sl=sl, tp=row.tp)
                 g_api.__print__("[%s] Adjusting the buy trade stop to open - %f,%f" % (position_id,
