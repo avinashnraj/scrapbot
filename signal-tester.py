@@ -1,12 +1,12 @@
 import time
 
 import signals
-import mt5_trade_api
+import trade_api
 from config import *
 
 g_price_data = dict()
-g_api = mt5_trade_api.Trader(access_token=g_token, symbol=g_symbol, magic=12345, log_level='error', server='demo',
-                             log_file='log.txt')
+g_api = trade_api.Trader(access_token=g_token, symbol=g_symbol, magic=12345, log_level='error', server='demo',
+                         log_file='log.txt')
 g_strategy = signals.Signal(symbol=g_symbol, fast_sma_shift=g_fast_sma_shift,
                             fast_sma_periods=g_fast_sma_periods,
                             slow_sma_periods=g_slow_sma_periods, slow_sma_shift=g_slow_sma_shift,
