@@ -3,9 +3,11 @@ import time
 import pandas as pd
 
 from trade_api import Trader
+
 from signals import Signal
 from config import *
 from expert import Expert
+from logger import Logger
 
 
 class Main(object):
@@ -16,8 +18,7 @@ class Main(object):
     last_price_bid = 0
 
     def __init__(self):
-        self.api = Trader(access_token=g_token, symbol=g_symbol, magic=g_magic, log_level='error', server='demo',
-                          log_file='log.txt')
+        self.api = Trader(symbol=g_symbol, magic=g_magic)
         self.signals = Signal(symbol=g_symbol, fast_sma_shift=g_fast_sma_shift, fast_sma_periods=g_fast_sma_periods,
                               slow_sma_periods=g_slow_sma_periods, slow_sma_shift=g_slow_sma_shift,
                               rsi_period=g_rsi_period, rsi_max=g_rsi_max, rsi_min=g_rsi_min)
@@ -46,16 +47,17 @@ class Main(object):
     def update_price_data(self):
         if self.expert.get_price_data() is None:
             new_price_data = self.api.get_candles(g_symbol, period=g_time_frame, number=g_number_of_candles)
-            self.expert.set_price_data(new_price_data)
-            self.api.__print__("Initial Price Data Received...")
+            self.expert.set_price_data(pd.DataFrame(new_price_data))
+            Logger.print("Initial Price Data Received...")
             return True
         # Normal operation will update pricedata on first attempt
-        new_price_data = self.api.get_candles(g_symbol, period=g_time_frame, number=g_number_of_candles)
-        if new_price_data[-2:-1] != self.expert.get_price_data()[-2:-1]:
+        data = self.api.get_candles(g_symbol, period=g_time_frame, number=g_number_of_candles)
+        new_price_data = pd.DataFrame(data)
+        current_list = self.expert.get_price_data().values[-2:-1].tolist()
+        new_list = new_price_data.values[-2:-1].tolist()
+        if new_list != current_list:
             self.expert.set_price_data(new_price_data)
-            data_frame = pd.DataFrame(self.expert.get_price_data()[-2:-1])
-            data_frame['time'] = pd.to_datetime(data_frame['time'], unit='s')
-            self.api.__print__("updated prices found..." + str(data_frame.values.tolist()))
+            Logger.print("updated prices found..." + str(self.expert.get_price_data().values[-2:-1].tolist()))
             return True
         return False
 
