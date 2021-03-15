@@ -24,7 +24,7 @@ class Trader(object):
         Logger.print("MetaTrader5 package version: " + self.connection.__version__)
 
         if not self.connection.initialize():
-            Logger.print("initialize() failed, error code =" + self.connection.last_error())
+            Logger.print("initialize() failed, error code =" + str(self.connection.last_error()))
             quit()
         self.symbol_point = self.get_symbol_info(symbol).point
 
@@ -38,7 +38,7 @@ class Trader(object):
             if positions is None:
                 Logger.print("No positions on " + symbol + ", error code={}".format(self.connection.last_error()))
             elif len(positions) > 0:
-                Logger.print("Total positions on " + symbol + " =" + len(positions))
+                Logger.print("Total positions on " + symbol + " =" + str(len(positions)))
                 # display all open positions
                 info = self.connection.symbol_info_tick(symbol)
                 for position in positions:
@@ -59,7 +59,7 @@ class Trader(object):
             if orders is None:
                 Logger.print("No orders on " + symbol + ", error code={}".format(self.connection.last_error()))
             elif len(orders) > 0:
-                Logger.print("Total orders on " + symbol + ":" + len(orders))
+                Logger.print("Total orders on " + symbol + ":" + str(len(orders)))
                 # display all active orders
                 for order in orders:
                     request = {
