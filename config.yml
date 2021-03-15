@@ -21,11 +21,11 @@ settings:
   trailing:
     enable: False
     trailing_start: 30
-    trailing_step: 10
+    trailing_step: 5
 
   sl_to_open:
     enable: True
-    total_profit: 10
+    total_profit: 3
 
   signals:
     open_type: EMA_RSI
@@ -33,13 +33,13 @@ settings:
     time_frame: m1
     number_of_candles: 300
     ema:
-      fast_sma_periods: 25
-      slow_sma_periods: 50
+      fast_sma_periods: 10
+      slow_sma_periods: 20
       fast_sma_shift: 0
       slow_sma_shift: 0
     rsi:
-      period: 7
-      max: 60
-      min: 40
+      period: 5
+      max: 70
+      min: 30
   logging:
     enable: True
