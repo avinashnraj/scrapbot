@@ -51,6 +51,6 @@ def get_latest_price_data():
 if __name__ == "__main__":
     prepare()
     get_latest_price_data()
-    g_strategy.get(price_data=g_price_data, signal_type="EMA_RSI", current=None, plot=True)
+    g_strategy.get(price_data=g_price_data, signal_type="EMA_RSI_GAP", current=None, plot=True)
     # time.sleep(5)
     # g_api.close_connection()

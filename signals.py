@@ -33,6 +33,8 @@ class Signal(object):
             return self.ema_rsi(price_data, signal_type, current, plot)
         elif signal_type == "EMA":
             return self.ema(price_data, signal_type, current, plot)
+        elif signal_type == "EMA_RSI_GAP":
+            return self.ema_rsi_gap(price_data, signal_type, current, plot)
         elif signal_type == "TEST":
             return self.test(price_data, signal_type, current, plot)
         return "None"
@@ -72,6 +74,52 @@ class Signal(object):
             if data_frame.signal.iat[-1] == 1.0:
                 return "Buy"
             elif data_frame.signal.iat[-1] == -1.0:
+                return "Sell"
+        else:
+            if current == "Sell" and data_frame.signal.iat[-1] == 1.0 \
+                    or current == "Buy" and data_frame.signal.iat[-1] == -1.0:
+                return "Close"
+        return "None"
+
+    def ema_rsi_gap(self, price_data, signal_type, current, plot=False):
+        data_frame = pd.DataFrame(price_data)
+
+        fast_sma_periods = str(self.fast_sma_periods) + '_' + signal_type
+        slow_sma_periods = str(self.slow_sma_periods) + '_' + signal_type
+
+        close_list = data_frame['close'].tolist()
+        slow = talib.EMA(np.asarray(close_list), timeperiod=self.slow_sma_periods)
+        fast = talib.EMA(np.asarray(close_list), timeperiod=self.fast_sma_periods)
+        data_frame[slow_sma_periods] = slow
+        data_frame[fast_sma_periods] = fast
+        data_frame['ma_signal'] = np.where(data_frame[slow_sma_periods] < data_frame[fast_sma_periods], 1.0, 0.0)
+
+        data_frame['ma_signal'] = data_frame['ma_signal'].diff()
+        data_frame['rsi'] = talib.RSI(np.asarray(close_list), timeperiod=self.rsi_period)
+        data_frame['rsi_signal'] = np.where(data_frame['rsi'] > self.rsi_max, 1.0, 0.0) + np.where(
+            data_frame['rsi'] < self.rsi_min, -1.0, 0.0)
+        data_frame['ma_gap'] = data_frame[fast_sma_periods] - data_frame[slow_sma_periods]
+        data_frame['signal'] = np.where((data_frame['rsi_signal'] == 1) & (data_frame['ma_signal'] == 1), 1.0,
+                                        0) + np.where(
+            (data_frame['rsi_signal'] == -1) & (data_frame['ma_signal'] == -1), -1.0, 0)
+        data_frame['time'] = pd.to_datetime(data_frame['time'], unit='s')
+
+        self.plot_signal(data_frame, signal_type, fast_sma_periods, slow_sma_periods, 'rsi', plot)
+
+        result = list()
+        if data_frame.signal.iat[-1] == 1.0 or data_frame.signal.iat[-1] == -1.0:
+            ma_gap = data_frame[data_frame['ma_gap'].abs() > 0.5]
+            ma_change = data_frame[data_frame['ma_signal'].abs() == 1]
+            last_change = ma_change[['time', 'ma_signal', 'ma_gap']].tail(10)
+            from_ts = last_change.iloc[-2]['time']
+            to_ts = last_change.iloc[-1]['time']
+            result = ma_gap[((ma_gap['time'] > from_ts) & (ma_gap['time'] < to_ts))]
+            print(len(result))
+
+        if current is None:
+            if data_frame.signal.iat[-1] == 1.0 and len(result) > 0:
+                return "Buy"
+            elif data_frame.signal.iat[-1] == -1.0 and len(result) > 0:
                 return "Sell"
         else:
             if current == "Sell" and data_frame.signal.iat[-1] == 1.0 \

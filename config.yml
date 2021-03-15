@@ -28,7 +28,7 @@ settings:
     total_profit: 3
 
   signals:
-    open_type: EMA_RSI
+    open_type: EMA_RSI_GAP
     close_type: EMA
     time_frame: m1
     number_of_candles: 300
