@@ -41,4 +41,5 @@ settings:
       period: 7
       max: 60
       min: 40
-  others:
+  logging:
+    enable: True

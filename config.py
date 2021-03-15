@@ -38,3 +38,5 @@ g_rsi_max = config["settings"]["signals"]["rsi"]["max"]
 g_rsi_min = config["settings"]["signals"]["rsi"]["min"]
 
 g_number_of_candles = config["settings"]["signals"]["number_of_candles"]
+
+g_logger_enable = config["settings"]["logging"]["enable"]

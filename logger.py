@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from config import *
 
 class Logger(object):
 
@@ -12,4 +12,5 @@ class Logger(object):
 
     @staticmethod
     def print(value):
-        print("[%s] %s" % (datetime.now().strftime("%m/%d/%Y %H:%M:%S"), value))
+        if g_logger_enable:
+            print("[%s] %s" % (datetime.now().strftime("%m/%d/%Y %H:%M:%S"), value))
