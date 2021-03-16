@@ -42,6 +42,6 @@ settings:
       max: 70
       min: 30
     gap:
-      distance: 50
+      distance: 30
   logging:
     enable: True
