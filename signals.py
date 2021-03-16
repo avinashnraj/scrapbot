@@ -101,9 +101,12 @@ class Signal(object):
         data_frame['rsi_signal'] = np.where(data_frame['rsi'] > self.rsi_max, 1.0, 0.0) + np.where(
             data_frame['rsi'] < self.rsi_min, -1.0, 0.0)
         data_frame['ma_gap'] = data_frame[fast_sma_periods] - data_frame[slow_sma_periods]
-        data_frame['signal'] = np.where((data_frame['rsi_signal'] == 1) & (data_frame['ma_signal'] == 1), 1.0,
-                                        0) + np.where(
-            (data_frame['rsi_signal'] == -1) & (data_frame['ma_signal'] == -1), -1.0, 0)
+        # data_frame['signal'] = np.where((data_frame['rsi_signal'] == 1) & (data_frame['ma_signal'] == 1), 1.0,
+        #                                 0) + np.where(
+        #     (data_frame['rsi_signal'] == -1) & (data_frame['ma_signal'] == -1), -1.0, 0)
+
+        data_frame['signal'] = data_frame['ma_signal']
+
         data_frame['time'] = pd.to_datetime(data_frame['time'], unit='s')
 
         self.plot_signal(data_frame, signal_type, fast_sma_periods, slow_sma_periods, 'rsi', plot)
