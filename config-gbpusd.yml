@@ -14,21 +14,21 @@ settings:
 
   money-management:
     initial_volume: 0.99
-    stop_loss: 10
+    stop_loss: 30
     take_profit: 1000
-    minimum_total_profit: 1000
+    minimum_total_profit: 5
 
   trailing:
     enable: True
-    trailing_start: 30
+    trailing_start: 10
     trailing_step: 5
 
   sl_to_open:
-    enable: False
-    total_profit: 5
+    enable: True
+    total_profit: 0
 
   signals:
-    open_type: EMA
+    open_type: EMA_RSI_GAP
     close_type: EMA
     time_frame: m1
     number_of_candles: 300
@@ -42,6 +42,6 @@ settings:
       max: 70
       min: 30
     gap:
-      distance: 0.25
+      distance: 25
   logging:
     enable: True

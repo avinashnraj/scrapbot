@@ -30,13 +30,13 @@ class Signal(object):
         self.symbol = symbol
         self.gap_distance = gap_distance
 
-    def get(self, price_data, signal_type, current, plot=False):
+    def get(self, price_data, signal_type, current, point=1.0, plot=False):
         if signal_type == "EMA_RSI":
             return self.ema_rsi(price_data, signal_type, current, plot)
         elif signal_type == "EMA":
             return self.ema(price_data, signal_type, current, plot)
         elif signal_type == "EMA_RSI_GAP":
-            return self.ema_rsi_gap(price_data, signal_type, current, plot)
+            return self.ema_rsi_gap(price_data, signal_type, current, point, plot)
         elif signal_type == "TEST":
             return self.test(price_data, signal_type, current, plot)
         return "None"
@@ -83,7 +83,7 @@ class Signal(object):
                 return "Close"
         return "None"
 
-    def ema_rsi_gap(self, price_data, signal_type, current, plot=False):
+    def ema_rsi_gap(self, price_data, signal_type, current, point, plot=False):
         data_frame = pd.DataFrame(price_data)
 
         fast_sma_periods = str(self.fast_sma_periods) + '_' + signal_type
@@ -104,7 +104,7 @@ class Signal(object):
         # data_frame['signal'] = np.where((data_frame['rsi_signal'] == 1) & (data_frame['ma_signal'] == 1), 1.0,
         #                                 0) + np.where(
         #     (data_frame['rsi_signal'] == -1) & (data_frame['ma_signal'] == -1), -1.0, 0)
-
+        #print(int(self.gap_distance)*point)
         data_frame['signal'] = data_frame['ma_signal']
 
         data_frame['time'] = pd.to_datetime(data_frame['time'], unit='s')
@@ -113,7 +113,7 @@ class Signal(object):
 
         result = list()
         if data_frame.signal.iat[-1] == 1.0 or data_frame.signal.iat[-1] == -1.0:
-            ma_gap = data_frame[data_frame['ma_gap'].abs() > self.gap_distance]
+            ma_gap = data_frame[data_frame['ma_gap'].abs() > self.gap_distance*point]
             ma_change = data_frame[data_frame['ma_signal'].abs() == 1]
             last_change = ma_change[['time', 'ma_signal', 'ma_gap']].tail(10)
             from_ts = last_change.iloc[-2]['time']

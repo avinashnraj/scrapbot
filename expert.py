@@ -27,7 +27,8 @@ class Expert(object):
         last_close_price = self.price_data['close'].values[-2:-1][0]
         if len_positions == 0 and len_orders == 0:
             try:
-                signal = self.signals.get(price_data=self.price_data, signal_type=g_signal_open_type, current=None)
+                signal = self.signals.get(price_data=self.price_data, signal_type=g_signal_open_type, current=None,
+                                          point=self.api.get_point())
                 if signal == "Buy":
                     Logger.print(signal + ": closing Price: " + str(last_close_price))
                     tp = g_take_profit
@@ -64,13 +65,14 @@ class Expert(object):
                 total_pl += row.profit
                 order_type = row.type
             signal = self.signals.get(price_data=self.price_data, signal_type=g_signal_close_type,
-                                      current=self.api.get_type_str(order_type))
+                                      current=self.api.get_type_str(order_type), point=self.api.get_point())
             if signal == "Close":
                 Logger.print(signal + ": closing Price: " + str(self.price_data['close'].values[-1:][0]))
                 self.api.close_all_orders(g_symbol)
             elif g_enable_sl_to_open and total_pl > g_sl_to_open_total_profit:
                 # slow ema for sl
-                raw1, raw2 = self.signals.get_signal_raw(price_data=self.price_data, signal_type=g_signal_close_type)
+                raw1, raw2 = self.signals.get_signal_raw(price_data=self.price_data,
+                                                         signal_type=g_signal_close_type, point=self.api.get_point())
                 self.set_sell_to_safe(positions, ask, bid, last_close_price, raw1)
             elif total_pl > g_min_total_profit:
                 if g_enable_sl_trailing:
