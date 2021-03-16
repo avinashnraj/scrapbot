@@ -16,9 +16,10 @@ class Signal(object):
     rsi_max = None
     rsi_min = None
     symbol = None
+    gap_distance = None
 
     def __init__(self, symbol, fast_sma_periods, slow_sma_periods, fast_sma_shift, slow_sma_shift, rsi_period, rsi_max,
-                 rsi_min):
+                 rsi_min, gap_distance):
         self.fast_sma_periods = fast_sma_periods
         self.slow_sma_periods = slow_sma_periods
         self.fast_sma_shift = fast_sma_shift
@@ -27,6 +28,7 @@ class Signal(object):
         self.rsi_max = rsi_max
         self.rsi_min = rsi_min
         self.symbol = symbol
+        self.gap_distance = gap_distance
 
     def get(self, price_data, signal_type, current, plot=False):
         if signal_type == "EMA_RSI":
@@ -108,13 +110,13 @@ class Signal(object):
 
         result = list()
         if data_frame.signal.iat[-1] == 1.0 or data_frame.signal.iat[-1] == -1.0:
-            ma_gap = data_frame[data_frame['ma_gap'].abs() > 0.5]
+            ma_gap = data_frame[data_frame['ma_gap'].abs() > self.gap_distance]
             ma_change = data_frame[data_frame['ma_signal'].abs() == 1]
             last_change = ma_change[['time', 'ma_signal', 'ma_gap']].tail(10)
             from_ts = last_change.iloc[-2]['time']
             to_ts = last_change.iloc[-1]['time']
             result = ma_gap[((ma_gap['time'] > from_ts) & (ma_gap['time'] < to_ts))]
-            print(len(result))
+            print(" CROSS DETECTED WITH GAP: " + str(len(result)))
 
         if current is None:
             if data_frame.signal.iat[-1] == 1.0 and len(result) > 0:

@@ -41,5 +41,7 @@ settings:
       period: 5
       max: 70
       min: 30
+    gap:
+      distance: 0.3
   logging:
     enable: True

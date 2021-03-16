@@ -10,7 +10,7 @@ g_api = trade_api.Trader(symbol=g_symbol, magic=12345)
 g_strategy = signals.Signal(symbol=g_symbol, fast_sma_shift=g_fast_sma_shift,
                             fast_sma_periods=g_fast_sma_periods,
                             slow_sma_periods=g_slow_sma_periods, slow_sma_shift=g_slow_sma_shift,
-                            rsi_period=g_rsi_period, rsi_max=70, rsi_min=30)
+                            rsi_period=g_rsi_period, rsi_max=70, rsi_min=30, gap_distance=0.1)
 g_last_price_ask = 0
 g_last_price_bid = 0
 

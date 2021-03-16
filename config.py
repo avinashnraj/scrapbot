@@ -36,6 +36,7 @@ g_slow_sma_shift = config["settings"]["signals"]["ema"]["slow_sma_shift"]
 g_rsi_period = config["settings"]["signals"]["rsi"]["period"]
 g_rsi_max = config["settings"]["signals"]["rsi"]["max"]
 g_rsi_min = config["settings"]["signals"]["rsi"]["min"]
+g_gap_distance = config["settings"]["signals"]["gap"]["distance"]
 
 g_number_of_candles = config["settings"]["signals"]["number_of_candles"]
 
