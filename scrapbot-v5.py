@@ -19,7 +19,7 @@ class Main(object):
     def __init__(self):
         self.api = Trader()
         for sym in g_symbols:
-            self.signals[sym] = Signal(symbol=g_symbol[sym], fast_sma_shift=g_fast_sma_shift[sym],
+            self.signals[sym] = Signal(symbol=sym, fast_sma_shift=g_fast_sma_shift[sym],
                                        fast_sma_periods=g_fast_sma_periods[sym],
                                        slow_sma_periods=g_slow_sma_periods[sym], slow_sma_shift=g_slow_sma_shift[sym],
                                        rsi_period=g_rsi_period[sym], rsi_max=g_rsi_max[sym], rsi_min=g_rsi_min[sym],
@@ -49,13 +49,13 @@ class Main(object):
 
     def update_price_data(self, sym):
         if self.expert[sym].get_price_data() is None:
-            new_price_data = self.api.get_candles(g_symbol[sym], period=g_time_frame[sym],
+            new_price_data = self.api.get_candles(sym, period=g_time_frame[sym],
                                                   number=g_number_of_candles[sym])
             self.expert[sym].set_price_data(pd.DataFrame(new_price_data))
             Logger.print("Initial Price Data Received...")
             return True
         # Normal operation will update pricedata on first attempt
-        data = self.api.get_candles(g_symbol[sym], period=g_time_frame[sym], number=g_number_of_candles[sym])
+        data = self.api.get_candles(sym, period=g_time_frame[sym], number=g_number_of_candles[sym])
         new_price_data = pd.DataFrame(data)
         current_list = self.expert[sym].get_price_data().values[-2:-1].tolist()
         new_list = new_price_data.values[-2:-1].tolist()
