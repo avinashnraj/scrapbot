@@ -15,18 +15,20 @@ class Trader(object):
     server = None
     log_file = None
     connection = Mt5
-    symbol_point = None
-    magic = None
+    symbol_point = dict()
+    magic = dict()
 
-    def __init__(self, symbol, magic):
-        self.magic = magic
+    def __init__(self):
         Logger.print("MetaTrader5 package author: " + self.connection.__author__)
         Logger.print("MetaTrader5 package version: " + self.connection.__version__)
 
         if not self.connection.initialize():
             Logger.print("initialize() failed, error code =" + str(self.connection.last_error()))
             quit()
-        self.symbol_point = self.get_symbol_info(symbol).point
+
+    def init(self, sym, magic):
+        self.magic[sym] = magic
+        self.symbol_point[sym] = self.get_symbol_info(sym).point
 
     def subscribe_market_data(self, symbol):
         pass
@@ -74,8 +76,8 @@ class Trader(object):
             max_tries -= 1
             time.sleep(0.1)
 
-    def get_point(self):
-        return self.symbol_point
+    def get_point(self, symbol):
+        return self.symbol_point[symbol]
 
     def get_symbol_info(self, symbol):
         symbol_info = self.connection.symbol_info(symbol)
@@ -164,7 +166,7 @@ class Trader(object):
                     "sl": sl,
                     "tp": tp,
                     "deviation": deviation,
-                    "magic": self.magic,
+                    "magic": self.magic[symbol],
                     "comment": "scrapbot open",
                     "type_time": self.connection.ORDER_TIME_GTC,
                     "type_filling": self.connection.ORDER_FILLING_IOC,
@@ -209,7 +211,7 @@ class Trader(object):
                     "sl": sl,
                     "tp": tp,
                     "deviation": deviation,
-                    "magic": self.magic,
+                    "magic": self.magic[symbol],
                     "comment": "scrapbot open",
                     "type_time": self.connection.ORDER_TIME_GTC,
                     "type_filling": self.connection.ORDER_FILLING_IOC
@@ -229,17 +231,11 @@ class Trader(object):
 
     def get_open_positions(self, symbol=None):
         positions = self.connection.positions_get(symbol=symbol)
-        return list(filter(self.filter_magic, positions))
+        return list(filter(lambda position, sym=symbol: position.magic == self.magic[sym], positions))
 
     def get_orders(self, symbol):
         orders = self.connection.orders_get(symbol=symbol)
-        return list(filter(self.filter_magic, orders))
-
-    def filter_magic(self, position):
-        if position.magic == self.magic:
-            return True
-        else:
-            return False
+        return list(filter(lambda position, sym=symbol: position.magic == self.magic[sym], orders))
 
     def close_connection(self):
         return self.connection.shutdown()
@@ -276,7 +272,7 @@ class Trader(object):
                     "position": position_id,
                     "sl": sl,
                     "tp": tp,
-                    "magic": self.magic
+                    "magic": self.magic[symbol]
                 }
                 # send a trading request
                 result = self.connection.order_send(request)

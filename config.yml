@@ -1,47 +1,6 @@
 settings:
   overall:
-    symbol: XAUUSD
-    magic:  101011
-
-  connection:
-    token: 3344c48d1371d9c5106d8ea5a3ccf44d5c70dbf1
-
-  martingale:
-    enable: False
-    level_spacing: 50
-    scale_factor: 2
-    level_maximum: 5
-
-  money-management:
-    initial_volume: 0.1
-    stop_loss: 100
-    take_profit: 1000
-    minimum_total_profit: 1000
-
-  trailing:
-    enable: False
-    trailing_start: 30
-    trailing_step: 5
-
-  sl_to_open:
-    enable: True
-    total_profit: 3
-
-  signals:
-    open_type: EMA_RSI_GAP
-    close_type: EMA
-    time_frame: m1
-    number_of_candles: 300
-    ema:
-      fast_sma_periods: 10
-      slow_sma_periods: 20
-      fast_sma_shift: 0
-      slow_sma_shift: 0
-    rsi:
-      period: 5
-      max: 70
-      min: 30
-    gap:
-      distance: 50
-  logging:
-    enable: True
+    symbols:
+        - XAUUSD
+        - EURUSD
+        - GBPUSD
