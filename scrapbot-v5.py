@@ -45,7 +45,7 @@ class Main(object):
                     self.last_price_ask = ask
 
                     self.expert[sym].engine(sym=sym, ask=self.last_price_ask, bid=self.last_price_bid)
-                time.sleep(0.1)
+            time.sleep(0.3)
 
     def update_price_data(self, sym):
         if self.expert[sym].get_price_data() is None:
