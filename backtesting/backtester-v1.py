@@ -8,7 +8,7 @@ from expert import Expert
 from logger import Logger
 from signals import Signal
 
-
+symbol = 'XAUUSD'
 class Position(object):
     size = 0.0
     profit = 0
@@ -39,14 +39,14 @@ class TestTrader(bt.Strategy):
     slow_ma = None
 
     def __init__(self):
-        self.signals = Signal(symbol=g_symbol, fast_sma_shift=g_fast_sma_shift, fast_sma_periods=g_fast_sma_periods,
-                              slow_sma_periods=g_slow_sma_periods, slow_sma_shift=g_slow_sma_shift,
-                              rsi_period=g_rsi_period, rsi_max=g_rsi_max, rsi_min=g_rsi_min, gap_distance=g_gap_distance)
+        self.signals = Signal(symbol=g_symbol[symbol], fast_sma_shift=g_fast_sma_shift[symbol], fast_sma_periods=g_fast_sma_periods[symbol],
+                              slow_sma_periods=g_slow_sma_periods[symbol], slow_sma_shift=g_slow_sma_shift[symbol],
+                              rsi_period=g_rsi_period[symbol], rsi_max=g_rsi_max[symbol], rsi_min=g_rsi_min[symbol], gap_distance=g_gap_distance[symbol])
         self.api = self
         self.expert = Expert(api=self, signals=self.signals)
 
-        ma_fast = bt.ind.SMA(period=g_fast_sma_periods)
-        ma_slow = bt.ind.SMA(period=g_slow_sma_periods)
+        ma_fast = bt.ind.SMA(period=g_fast_sma_periods[symbol])
+        ma_slow = bt.ind.SMA(period=g_slow_sma_periods[symbol])
         self.crossover = bt.ind.CrossOver(ma_fast, ma_slow)
         self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
 
@@ -84,10 +84,10 @@ class TestTrader(bt.Strategy):
         #print(len(self.expert.get_price_data().values))
 
         if len(self.expert.get_price_data().values) > 0:
-            self.expert.engine(ask, bid)
+            self.expert.engine(symbol, ask, bid)
 
     def update_price_data(self):
-        new_price_data = self.api.get_candles(g_symbol, period=g_time_frame, number=g_number_of_candles)
+        new_price_data = self.api.get_candles(g_symbol[symbol], period=g_time_frame[symbol], number=g_number_of_candles[symbol])
         self.expert.set_price_data(new_price_data)
         # Logger.print( self.expert.get_price_data())
         return True
@@ -105,7 +105,7 @@ class TestTrader(bt.Strategy):
             self.close()
         #self.positions.pop()
 
-    def get_point(self):
+    def get_point(self, symbol):
         return self.symbol_point
 
     def get_symbol_info(self, symbol):
@@ -230,12 +230,16 @@ data = bt.feeds.GenericCSVData(
 cerebro.adddata(data)
 cerebro.addstrategy(TestTrader)
 cerebro.broker.setcash(10000.0)
-cerebro.broker.setcommission(commission=0)
+# Add a FixedSize sizer according to the stake
+cerebro.addsizer(bt.sizers.FixedSize, stake=0.2)
+cerebro.broker.setcommission(commission=0.001)
 # erebro.addsizer(bt.sizers.PercentSizer, percents = 10)
 
 # cerebro.addanalyzer(btanalysers.SharpeRatio, _name="sharpe")
 # cerebro.addanalyzer(btanalysers.Transactions, _name="trans")
 # cerebro.addanalyzer(btanalysers.TradeAnalyzer, _name="trades")
+# Print out the starting conditions
+print('Starting Portfolio Value: %.8f' % cerebro.broker.getvalue())
 
 back = cerebro.run()
 
@@ -245,4 +249,7 @@ back = cerebro.run()
 # print(back[0].analyzers.trans.get_analysis())
 # print(back[0].analyzers.trades.get_analysis())
 
-cerebro.plot()
+# Print out the final result
+print('Final Portfolio Value: %.8f' % cerebro.broker.getvalue())
+
+cerebro.plot(style='candlestick', barup='green', bardown='red')
