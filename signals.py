@@ -1,10 +1,11 @@
-
 import random
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import talib
+
+from logger import Logger
 
 
 class Signal(object):
@@ -104,7 +105,7 @@ class Signal(object):
         # data_frame['signal'] = np.where((data_frame['rsi_signal'] == 1) & (data_frame['ma_signal'] == 1), 1.0,
         #                                 0) + np.where(
         #     (data_frame['rsi_signal'] == -1) & (data_frame['ma_signal'] == -1), -1.0, 0)
-        #print(int(self.gap_distance)*point)
+        # print(int(self.gap_distance)*point)
         data_frame['signal'] = data_frame['ma_signal']
 
         data_frame['time'] = pd.to_datetime(data_frame['time'], unit='s')
@@ -113,13 +114,16 @@ class Signal(object):
 
         result = list()
         if data_frame.signal.iat[-1] == 1.0 or data_frame.signal.iat[-1] == -1.0:
-            ma_gap = data_frame[data_frame['ma_gap'].abs() > self.gap_distance*point]
+            ma_gap = data_frame[data_frame['ma_gap'].abs() > self.gap_distance * point]
             ma_change = data_frame[data_frame['ma_signal'].abs() == 1]
             last_change = ma_change[['time', 'ma_signal', 'ma_gap']].tail(10)
-            from_ts = last_change.iloc[-2]['time']
-            to_ts = last_change.iloc[-1]['time']
-            result = ma_gap[((ma_gap['time'] > from_ts) & (ma_gap['time'] < to_ts))]
-            print(" CROSS DETECTED WITH GAP: " + str(len(result)))
+            if len(last_change.index) >= 2:
+                from_ts = last_change.iloc[-2]['time']
+                to_ts = last_change.iloc[-1]['time']
+                result = ma_gap[((ma_gap['time'] > from_ts) & (ma_gap['time'] < to_ts))]
+            Logger.print(
+                " CROSS DETECTED ON " + self.symbol + " WITH GAP: " + str(len(result)) + " and the point is " + str(
+                    point))
 
         if current is None:
             if data_frame.signal.iat[-1] == 1.0 and len(result) > 0:
