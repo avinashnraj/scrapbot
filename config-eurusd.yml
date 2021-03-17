@@ -20,7 +20,7 @@ settings:
 
   trailing:
     enable: True
-    trailing_start: 50
+    trailing_start: 30
     trailing_step: 5
 
   sl_to_open:
