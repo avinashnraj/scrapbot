@@ -155,13 +155,6 @@ class TestTrader(bt.Strategy):
             p.type = 0
             p.position = self.position
             result.append(p)
-        # for position in self.getpositions():
-        #     p = Position()
-        #     p.size = position.size
-        #     p.type = 0
-        #     p.position = position
-        #     result.append(p)
-        # print(result)
         return result
 
     def get_orders(self, symbol):
@@ -206,7 +199,7 @@ class TestTrader(bt.Strategy):
 cerebro = bt.Cerebro()
 
 data = bt.feeds.GenericCSVData(
-    dataname='XAUUSD_M1_v1-1.csv',
+    dataname='XAUUSD_M1_v1-2.csv',
     timeframe=bt.TimeFrame.Minutes,
     nullvalue=0.0,
     dtformat=('%Y.%m.%d'),
