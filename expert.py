@@ -1,6 +1,6 @@
 from config import *
 from logger import Logger
-
+import traceback, sys
 
 class Expert(object):
     price_data = None
@@ -24,7 +24,7 @@ class Expert(object):
         len_positions = len(positions) if positions is not None else 0
         len_orders = len(orders) if orders is not None else 0
         total_pl = -0.0
-        last_close_price = self.price_data['close'].values[-2:-1][0]
+        last_close_price = self.price_data[-1]['close']
         if len_positions == 0 and len_orders == 0:
             try:
                 signal = self.signals.get(price_data=self.price_data, signal_type=g_signal_open_type[sym],
@@ -65,6 +65,7 @@ class Expert(object):
                                                         sl=sl)
             except Exception as e:
                 Logger.print(str(e))
+                traceback.print_exception(*sys.exc_info())
         else:
             order_type = None
             for row in positions:
@@ -73,7 +74,7 @@ class Expert(object):
             signal = self.signals.get(price_data=self.price_data, signal_type=g_signal_close_type[sym],
                                       current=self.api.get_type_str(order_type), point=self.api.get_point(sym))
             if signal == "Close":
-                Logger.print(signal + ": closing Price: " + str(self.price_data['close'].values[-1:][0]))
+                Logger.print(signal + ": closing Price: " + str(self.price_data[-1]['close']))
                 self.api.close_all_orders(sym)
             elif g_enable_sl_to_open[sym] and total_pl > g_sl_to_open_total_profit[sym]:
                 # slow ema for sl

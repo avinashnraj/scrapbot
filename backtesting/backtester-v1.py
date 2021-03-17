@@ -1,14 +1,15 @@
 from datetime import datetime
 
 import backtrader as bt
-import pandas as pd
-
 from config import *
 from expert import Expert
 from logger import Logger
 from signals import Signal
+import numpy as np
 
 symbol = 'XAUUSD'
+
+
 class Position(object):
     size = 0.0
     profit = 0
@@ -39,9 +40,11 @@ class TestTrader(bt.Strategy):
     slow_ma = None
 
     def __init__(self):
-        self.signals = Signal(symbol=g_symbol[symbol], fast_sma_shift=g_fast_sma_shift[symbol], fast_sma_periods=g_fast_sma_periods[symbol],
+        self.signals = Signal(symbol=g_symbol[symbol], fast_sma_shift=g_fast_sma_shift[symbol],
+                              fast_sma_periods=g_fast_sma_periods[symbol],
                               slow_sma_periods=g_slow_sma_periods[symbol], slow_sma_shift=g_slow_sma_shift[symbol],
-                              rsi_period=g_rsi_period[symbol], rsi_max=g_rsi_max[symbol], rsi_min=g_rsi_min[symbol], gap_distance=g_gap_distance[symbol])
+                              rsi_period=g_rsi_period[symbol], rsi_max=g_rsi_max[symbol], rsi_min=g_rsi_min[symbol],
+                              gap_distance=g_gap_distance[symbol])
         self.api = self
         self.expert = Expert(api=self, signals=self.signals)
 
@@ -53,7 +56,7 @@ class TestTrader(bt.Strategy):
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
-            #Logger.print('ORDER ACCEPTED/SUBMITTED ' + str(order.created.dt))
+            # Logger.print('ORDER ACCEPTED/SUBMITTED ' + str(order.created.dt))
             self.order = order
             return
 
@@ -70,9 +73,9 @@ class TestTrader(bt.Strategy):
                 pass
             else:  # Sell
                 Logger.print('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                         (order.executed.price,
-                          order.executed.value,
-                          order.executed.comm))
+                             (order.executed.price,
+                              order.executed.value,
+                              order.executed.comm))
                 pass
         # Sentinel to None: new orders allowed
         self.order = None
@@ -80,14 +83,15 @@ class TestTrader(bt.Strategy):
     def next(self):
         self.update_price_data()
         bid = ask = self.data.close[0]
-        #print(ask, bid, len(self.data.close))
-        #print(len(self.expert.get_price_data().values))
+        # print(ask, bid, len(self.data.close))
+        # print(len(self.expert.get_price_data().values))
 
-        if len(self.expert.get_price_data().values) > 0:
+        if len(self.expert.get_price_data()) > 0:
             self.expert.engine(symbol, ask, bid)
 
     def update_price_data(self):
-        new_price_data = self.api.get_candles(g_symbol[symbol], period=g_time_frame[symbol], number=g_number_of_candles[symbol])
+        new_price_data = self.api.get_candles(g_symbol[symbol], period=g_time_frame[symbol],
+                                              number=g_number_of_candles[symbol])
         self.expert.set_price_data(new_price_data)
         # Logger.print( self.expert.get_price_data())
         return True
@@ -101,9 +105,8 @@ class TestTrader(bt.Strategy):
 
     def close_all_orders(self, symbol):
         if self.position:
-
             self.close()
-        #self.positions.pop()
+        # self.positions.pop()
 
     def get_point(self, symbol):
         return self.symbol_point
@@ -158,7 +161,7 @@ class TestTrader(bt.Strategy):
         #     p.type = 0
         #     p.position = position
         #     result.append(p)
-        #print(result)
+        # print(result)
         return result
 
     def get_orders(self, symbol):
@@ -177,29 +180,21 @@ class TestTrader(bt.Strategy):
         return "m1"
 
     def get_candles(self, symbol, period, number, start=0):
-        df = pd.DataFrame()
-        # df['time'] = self.data.volume
-        o = []
-        h = []
-        l = []
-        c = []
-        v = []
-        try:
-            if len(self.data.open) > number:
-                for i in range(number):
-                    o.append(self.data.open[number - 1 - i])
-                    h.append(self.data.high[number - 1 - i])
-                    l.append(self.data.low[number - 1 - i])
-                    c.append(self.data.close[number - 1 - i])
-                    v.append(self.data.volume[number - 1 - i])
-        except Exception:
-            pass
-        df['open'] = o
-        df['high'] = h
-        df['low'] = l
-        df['close'] = c
-        df['volume'] = v
-        return df
+        t = list(self.data.datetime)[:number]
+        o = list(self.data.open)[:number]
+        h = list(self.data.high)[:number]
+        l = list(self.data.low)[:number]
+        c = list(self.data.close)[:number]
+        v = list(self.data.volume)[:number]
+        i = list(self.data.openinterest)[:number]
+
+        dt = np.dtype([('time', np.int64), ('open', np.float64), ('high', np.float64), ('low', np.float64),
+                       ('close', np.float64), ('volume', np.uint64), ('openinterest', np.uint64)])
+        temp = list()
+        for index in range(len(t)):
+            temp.append((t[index], o[index], h[index], l[index], c[index], v[index], i[index]))
+        ts = np.array(temp, dtype=dt)
+        return ts
 
     def is_connected(self):
         return True
@@ -225,7 +220,6 @@ data = bt.feeds.GenericCSVData(
     volume=6,
     openinterest=-1
 )
-
 
 cerebro.adddata(data)
 cerebro.addstrategy(TestTrader)
