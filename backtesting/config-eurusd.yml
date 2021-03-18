@@ -2,6 +2,7 @@ settings:
   overall:
     symbol: EURUSD
     magic:  101012
+    trade_on_close: True
 
   connection:
     token: 3344c48d1371d9c5106d8ea5a3ccf44d5c70dbf1

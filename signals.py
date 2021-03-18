@@ -147,15 +147,12 @@ class Signal(object):
         fast = talib.EMA(np.asarray(close_list), timeperiod=self.fast_sma_periods)
         data_frame[slow_sma_periods] = slow
         data_frame[fast_sma_periods] = fast
+        data_frame = data_frame.dropna()
         data_frame['ma_signal'] = np.where(data_frame[slow_sma_periods] < data_frame[fast_sma_periods], 1.0, 0.0)
 
         data_frame['ma_signal'] = data_frame['ma_signal'].diff()
         data_frame['signal'] = data_frame['ma_signal']
-
-        # print(data_frame.tail(10))
-
         self.plot_signal(data_frame, signal_type, fast_sma_periods, slow_sma_periods, None, plot)
-
         if current is None:
             if data_frame.signal.iat[-1] == 1.0:
                 return "Buy"

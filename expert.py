@@ -27,45 +27,11 @@ class Expert(object):
         last_close_price = self.price_data[-1]['close']
         if len_positions == 0 and len_orders == 0:
             try:
-                signal = self.signals.get(price_data=self.price_data, signal_type=g_signal_open_type[sym],
-                                          current=None,
-                                          point=self.api.get_point(sym))
-                if signal == "Buy":
-                    Logger.print(signal + ": closing Price: " + str(last_close_price))
-                    tp = g_take_profit[sym]
-                    sl = ((g_level_maximum[sym] - 1) * g_level_spacing[sym] if g_martingale_enable[sym] else 0 +
-                                                       g_stop_loss[sym])
-                    tp = ask + tp * self.api.get_point(sym)
-                    sl = ask - sl * self.api.get_point(sym)
-                    self.api.open_trade(symbol=sym, is_buy=True, rate=ask, amount=g_initial_volume[sym],
-                                        tp=tp, sl=sl)
-                    if g_martingale_enable[sym]:
-                        for index in range(1, g_level_maximum[sym]):
-                            amt = index * g_scale_factor[sym] * g_initial_volume[sym]
-                            self.api.create_entry_order(symbol=sym, is_buy=True, amount=amt,
-                                                        tp=tp,
-                                                        rate=ask - index * g_level_spacing[
-                                                            symbol] * self.api.get_point(sym),
-                                                        sl=sl)
-                elif signal == "Sell":
-                    Logger.print(signal + ": closing Price: " + str(last_close_price))
-                    tp = g_take_profit[sym]
-                    sl = (
-                        (g_level_maximum[sym] - 1) * g_level_spacing[sym] if g_martingale_enable[sym] else 0 +
-                                                                                                           g_stop_loss[sym])
-                    tp = bid - tp * self.api.get_point(sym)
-                    sl = bid + sl * self.api.get_point(sym)
-                    self.api.open_trade(symbol=sym, is_buy=False, rate=bid,
-                                        amount=g_initial_volume[sym], tp=tp, sl=sl)
-                    if g_martingale_enable[sym]:
-                        for index in range(1, g_level_maximum[sym]):
-                            amt = index * g_scale_factor[sym] * g_initial_volume[sym]
-                            self.api.create_entry_order(symbol=sym, is_buy=False, amount=amt, tp=tp,
-                                                        rate=bid + index * g_level_spacing[sym] * self.api.get_point(sym),
-                                                        sl=sl)
+                self.check_buy_or_sell(sym=sym, last_close_price=last_close_price, ask=ask, bid=bid)
             except Exception as e:
                 Logger.print(str(e))
                 traceback.print_exception(*sys.exc_info())
+
         else:
             order_type = None
             for row in positions:
@@ -76,6 +42,8 @@ class Expert(object):
             if signal == "Close":
                 Logger.print(signal + ": closing Price: " + str(self.price_data[-1]['close']))
                 self.api.close_all_orders(sym)
+                if g_trade_on_close[sym]:
+                    self.check_buy_or_sell(sym=sym, last_close_price=last_close_price, ask=ask, bid=bid)
             elif g_enable_sl_to_open[sym] and total_pl > g_sl_to_open_total_profit[sym]:
                 # slow ema for sl
                 raw1, raw2 = self.signals.get_signal_raw(price_data=self.price_data,
@@ -89,6 +57,44 @@ class Expert(object):
                 else:
                     self.api.close_all_orders(g_symbol)
                     Logger.print("Finishing and closing all orders and got enough profit")
+
+    def check_buy_or_sell(self, sym, last_close_price, ask, bid):
+        signal = self.signals.get(price_data=self.price_data, signal_type=g_signal_open_type[sym],
+                                      current=None,
+                                      point=self.api.get_point(sym))
+        if signal == "Buy":
+            Logger.print(signal + ": closing Price: " + str(last_close_price))
+            tp = g_take_profit[sym]
+            sl = ((g_level_maximum[sym] - 1) * g_level_spacing[sym] if g_martingale_enable[sym] else 0 +
+                                                                                                     g_stop_loss[sym])
+            tp = ask + tp * self.api.get_point(sym)
+            sl = ask - sl * self.api.get_point(sym)
+            self.api.open_trade(symbol=sym, is_buy=True, rate=ask, amount=g_initial_volume[sym],
+                                tp=tp, sl=sl)
+            if g_martingale_enable[sym]:
+                for index in range(1, g_level_maximum[sym]):
+                    amt = index * g_scale_factor[sym] * g_initial_volume[sym]
+                    self.api.create_entry_order(symbol=sym, is_buy=True, amount=amt,
+                                                tp=tp,
+                                                rate=ask - index * g_level_spacing[
+                                                    symbol] * self.api.get_point(sym),
+                                                sl=sl)
+        elif signal == "Sell":
+            Logger.print(signal + ": closing Price: " + str(last_close_price))
+            tp = g_take_profit[sym]
+            sl = (
+                (g_level_maximum[sym] - 1) * g_level_spacing[sym] if g_martingale_enable[sym] else 0 +
+                                                                                                   g_stop_loss[sym])
+            tp = bid - tp * self.api.get_point(sym)
+            sl = bid + sl * self.api.get_point(sym)
+            self.api.open_trade(symbol=sym, is_buy=False, rate=bid,
+                                amount=g_initial_volume[sym], tp=tp, sl=sl)
+            if g_martingale_enable[sym]:
+                for index in range(1, g_level_maximum[sym]):
+                    amt = index * g_scale_factor[sym] * g_initial_volume[sym]
+                    self.api.create_entry_order(symbol=sym, is_buy=False, amount=amt, tp=tp,
+                                                rate=bid + index * g_level_spacing[sym] * self.api.get_point(sym),
+                                                sl=sl)
 
     def trail(self, sym, positions, ask, bid, last_close_price):
         trailing_start = g_trailing_start[sym]

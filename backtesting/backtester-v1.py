@@ -17,7 +17,7 @@ class Position(object):
     ticket = 0
     sl = 0
     tp = 0
-    position = None
+    order = None
 
     def __init__(self):
         pass
@@ -38,7 +38,9 @@ class TestTrader(bt.Strategy):
     expert = None
     fast_ma = None
     slow_ma = None
-
+    dt = np.dtype([('time', np.float64), ('open', np.float64), ('high', np.float64), ('low', np.float64),
+                   ('close', np.float64), ('volume', np.uint64), ('openinterest', np.uint64)])
+    candles = list()
     def __init__(self):
         self.signals = Signal(symbol=g_symbol[symbol], fast_sma_shift=g_fast_sma_shift[symbol],
                               fast_sma_periods=g_fast_sma_periods[symbol],
@@ -47,11 +49,15 @@ class TestTrader(bt.Strategy):
                               gap_distance=g_gap_distance[symbol])
         self.api = self
         self.expert = Expert(api=self, signals=self.signals)
+        ma_fast = bt.talib.SMA(self.data.close, timeperiod=g_fast_sma_periods[symbol], plotname='TA_SMA_SLOW')
+        #bt.indicators.SMA(self.data, period=g_fast_sma_periods[symbol])
+        ma_slow = bt.talib.SMA(self.data.close, timeperiod=g_slow_sma_periods[symbol], plotname='TA_SMA_SLOW')
+        #bt.indicators.SMA(self.data, period=g_slow_sma_periods[symbol])
 
-        ma_fast = bt.ind.SMA(period=g_fast_sma_periods[symbol])
-        ma_slow = bt.ind.SMA(period=g_slow_sma_periods[symbol])
+        #ma_fast = bt.ind.SMA(period=g_fast_sma_periods[symbol])
+        #ma_slow = bt.ind.SMA(period=g_slow_sma_periods[symbol])
         self.crossover = bt.ind.CrossOver(ma_fast, ma_slow)
-        self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
+        self.rsi = bt.indicators.RSI_SMA(self.data.close, period=g_rsi_period[symbol])
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -64,7 +70,11 @@ class TestTrader(bt.Strategy):
             Logger.print('BUY EXPIRED')
 
         elif order.status in [order.Completed]:
+            p = Position()
+            p.size = 1
+            p.position = order
             if order.isbuy():
+                p.type = 0
                 Logger.print(
                     'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
                     (order.executed.price,
@@ -72,20 +82,30 @@ class TestTrader(bt.Strategy):
                      order.executed.comm))
                 pass
             else:  # Sell
+                p.type = 1
                 Logger.print('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
                              (order.executed.price,
                               order.executed.value,
                               order.executed.comm))
                 pass
+            self.positions.append(p)
         # Sentinel to None: new orders allowed
+
         self.order = None
 
     def next(self):
+        # if self.crossover > 0:  # if fast crosses slow to the upside
+        #     if self.position:
+        #         self.close()
+        #     self.buy()  # enter long
+        # elif self.crossover < 0:  # in the market & cross to the downside
+        #     if self.position:
+        #         self.close()  # close long position
+        #     self.sell()
+        #print(self.data.open[0], self.data.high[0], self.data.low[0], self.data.close[0])
         self.update_price_data()
-        bid = ask = self.data.close[0]
-        # print(ask, bid, len(self.data.close))
-        # print(len(self.expert.get_price_data().values))
-
+        ask = self.data.open[0]
+        bid = self.data.open[0]
         if len(self.expert.get_price_data()) > 0:
             self.expert.engine(symbol, ask, bid)
 
@@ -106,7 +126,7 @@ class TestTrader(bt.Strategy):
     def close_all_orders(self, symbol):
         if self.position:
             self.close()
-        # self.positions.pop()
+        self.positions.clear()
 
     def get_point(self, symbol):
         return self.symbol_point
@@ -131,12 +151,12 @@ class TestTrader(bt.Strategy):
         p = Position()
         p.size = amount
         if is_buy:
-            pos = self.buy(size=amount)
+            pos = self.buy()
             p.type = 0
             p.position = pos
             self.positions.append(p)
         else:
-            pos = self.sell(size=amount)
+            pos = self.sell()
             p.type = 1
             p.position = pos
             self.positions.append(p)
@@ -148,14 +168,7 @@ class TestTrader(bt.Strategy):
         return None
 
     def get_open_positions(self, symbol=None):
-        result = list()
-        if self.position:
-            p = Position()
-            p.size = 1
-            p.type = 0
-            p.position = self.position
-            result.append(p)
-        return result
+        return self.positions
 
     def get_orders(self, symbol):
         return list()
@@ -173,20 +186,17 @@ class TestTrader(bt.Strategy):
         return "m1"
 
     def get_candles(self, symbol, period, number, start=0):
-        t = list(self.data.datetime)[:number]
-        o = list(self.data.open)[:number]
-        h = list(self.data.high)[:number]
-        l = list(self.data.low)[:number]
-        c = list(self.data.close)[:number]
-        v = list(self.data.volume)[:number]
-        i = list(self.data.openinterest)[:number]
-
-        dt = np.dtype([('time', np.int64), ('open', np.float64), ('high', np.float64), ('low', np.float64),
-                       ('close', np.float64), ('volume', np.uint64), ('openinterest', np.uint64)])
-        temp = list()
-        for index in range(len(t)):
-            temp.append((t[index], o[index], h[index], l[index], c[index], v[index], i[index]))
-        ts = np.array(temp, dtype=dt)
+        if len(self.candles) == 0:
+            for index in range(self.data.close.lencount):
+                count = index
+                self.candles.append((self.data.datetime.array[count], self.data.open.array[count], self.data.high.array[count],
+                                     self.data.low.array[count], self.data.close.array[count],
+                                     self.data.volume.array[count], self.data.openinterest.array[count]))
+        else:
+            self.candles.append((self.data.datetime[0], self.data.open[0], self.data.high[0],
+                                 self.data.low[0], self.data.close[0],
+                                 self.data.volume[0], self.data.openinterest[0]))
+        ts = np.array(self.candles, dtype=self.dt)
         return ts
 
     def is_connected(self):
@@ -206,9 +216,9 @@ data = bt.feeds.GenericCSVData(
     tmformat=('%H:%M'),
     datetime=0,
     time=1,
-    high=2,
-    low=3,
-    open=4,
+    open=2,
+    high=3,
+    low=4,
     close=5,
     volume=6,
     openinterest=-1
@@ -218,8 +228,8 @@ cerebro.adddata(data)
 cerebro.addstrategy(TestTrader)
 cerebro.broker.setcash(10000.0)
 # Add a FixedSize sizer according to the stake
-cerebro.addsizer(bt.sizers.FixedSize, stake=0.2)
-cerebro.broker.setcommission(commission=0.001)
+cerebro.addsizer(bt.sizers.FixedSize, stake=0.01)
+cerebro.broker.setcommission(commission=0.0001)
 # erebro.addsizer(bt.sizers.PercentSizer, percents = 10)
 
 # cerebro.addanalyzer(btanalysers.SharpeRatio, _name="sharpe")

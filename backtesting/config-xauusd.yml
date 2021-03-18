@@ -2,6 +2,7 @@ settings:
   overall:
     symbol: XAUUSD
     magic:  101011
+    trade_on_close: True
 
   connection:
     token: 3344c48d1371d9c5106d8ea5a3ccf44d5c70dbf1
@@ -13,7 +14,7 @@ settings:
     level_maximum: 5
 
   money-management:
-    initial_volume: 1
+    initial_volume: 0.1
     stop_loss: 100
     take_profit: 1000
     minimum_total_profit: 10
@@ -31,14 +32,14 @@ settings:
     open_type: EMA
     close_type: EMA
     time_frame: m1
-    number_of_candles: 60
+    number_of_candles: 50
     ema:
       fast_sma_periods: 10
       slow_sma_periods: 20
       fast_sma_shift: 0
       slow_sma_shift: 0
     rsi:
-      period: 5
+      period: 14
       max: 70
       min: 30
     gap:

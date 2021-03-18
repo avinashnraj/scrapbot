@@ -38,6 +38,7 @@ g_rsi_period = dict()
 g_rsi_max = dict()
 g_rsi_min = dict()
 g_gap_distance = dict()
+g_trade_on_close = dict()
 
 g_number_of_candles = dict()
 
@@ -82,5 +83,6 @@ for symbol in g_symbols:
     g_gap_distance[symbol] = config["settings"]["signals"]["gap"]["distance"]
 
     g_number_of_candles[symbol] = config["settings"]["signals"]["number_of_candles"]
+    g_trade_on_close[symbol] = config["settings"]["overall"]["trade_on_close"]
 
     g_logger_enable[symbol] = config["settings"]["logging"]["enable"]
